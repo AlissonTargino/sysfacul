@@ -27,3 +27,4 @@ const addAuthToken = (config: any) => {
 apiUsuarios.interceptors.request.use(addAuthToken); 
 apiRecursos.interceptors.request.use(addAuthToken);
 apiAgendamento.interceptors.request.use(addAuthToken);
+
