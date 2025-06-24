@@ -1,8 +1,8 @@
 import axios from 'axios';
 
-const API_USUARIOS_URL = 'http://localhost:3335';
-const API_RECURSOS_URL = 'http://localhost:3333';
-const API_AGENDAMENTO_URL = 'http://localhost:3334';
+const API_USUARIOS_URL = 'https://usuarios-service.fly.dev/';
+const API_RECURSOS_URL = 'https://recursos-service.fly.dev/';
+const API_AGENDAMENTO_URL = 'https://agendamento-service.fly.dev/';
 
 export const apiUsuarios = axios.create({
   baseURL: API_USUARIOS_URL,
