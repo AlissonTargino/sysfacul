@@ -1,6 +1,3 @@
-"use client"
-
-import type React from "react"
 
 import { useState } from "react"
 import { useRouter } from "next/router"
@@ -10,23 +7,37 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Loader2 } from "lucide-react"
 
+import { useAuth } from "@/context/AuthContext"
+import { apiUsuarios } from "@/lib/api"
+
 export default function Login() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const router = useRouter()
+  const [error, setError] = useState<string | null>(null) 
+
+  const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    setError(null) 
 
-    // Simular login
-    setTimeout(() => {
-      localStorage.setItem("auth-token", "fake-token")
-      localStorage.setItem("user-name", "João Silva")
-      setIsLoading(false)
-      router.push("/dashboard")
-    }, 1500)
+    try {
+      const response = await apiUsuarios.post('/auth/login', {
+        email,
+        password,
+      });
+  
+      login(response.data.token);
+
+    } catch (err: any) {
+    
+      const errorMessage = err.response?.data?.error || 'Não foi possível fazer login. Verifique suas credenciais.';
+      setError(errorMessage);
+      setIsLoading(false);
+    }
+ 
   }
 
   return (
@@ -63,6 +74,8 @@ export default function Login() {
                 required
               />
             </div>
+            {/* Exibe a mensagem de erro, se houver */}
+            {error && <p className="text-sm font-medium text-destructive text-center">{error}</p>}
           </CardContent>
           <CardFooter>
             <Button type="submit" className="w-full" disabled={isLoading}>

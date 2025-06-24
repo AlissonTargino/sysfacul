@@ -1,58 +1,45 @@
-"use client"
+import "@/styles/globals.css";
+import type { AppProps } from "next/app";
+import { useRouter } from "next/router";
+import { useEffect } from "react";
+import { AuthProvider, useAuth } from "@/context/AuthContext";
+import Layout from "@/components/layout";
 
-import "@/styles/globals.css"
-import type { AppProps } from "next/app"
-import { useRouter } from "next/router"
-import { useEffect, useState } from "react"
-import Layout from "@/components/layout"
+function AppContent({ Component, pageProps }: AppProps) {
+  const router = useRouter();
+  const { isAuthenticated, isLoading } = useAuth();
 
-export default function App({ Component, pageProps }: AppProps) {
-  const router = useRouter()
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
-
-  useEffect(() => {
-    // Simular verificação de autenticação
-    const token = localStorage.getItem("auth-token")
-    if (token) {
-      setIsAuthenticated(true)
-    }
-    setIsLoading(false)
-  }, [])
 
   useEffect(() => {
-    if (!isLoading) {
-      if (!isAuthenticated && router.pathname !== "/login") {
-        router.push("/login")
-      } else if (isAuthenticated && router.pathname === "/login") {
-        router.push("/dashboard")
-      }
+    if (!isLoading && !isAuthenticated && router.pathname !== "/login") {
+      router.push("/login");
     }
-  }, [isAuthenticated, isLoading, router])
+  }, [isAuthenticated, isLoading, router]);
 
+ 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-900"></div>
       </div>
-    )
+    );
+  }
+  
+  if (router.pathname === "/login") {
+    return <Component {...pageProps} />;
   }
 
-  // Páginas que não precisam do layout principal
-  const publicPages = ["/login"]
-  const isPublicPage = publicPages.includes(router.pathname)
-
-  if (isPublicPage) {
-    return <Component {...pageProps} />
-  }
-
-  if (!isAuthenticated) {
-    return null
-  }
-
-  return (
+  return isAuthenticated ? (
     <Layout>
       <Component {...pageProps} />
     </Layout>
-  )
+  ) : null;
+}
+
+export default function App({ Component, pageProps }: AppProps) {
+  return (
+    <AuthProvider>
+      <AppContent Component={Component} pageProps={pageProps} />
+    </AuthProvider>
+  );
 }
