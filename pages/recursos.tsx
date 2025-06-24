@@ -2,7 +2,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Plus, Search, MoreHorizontal, Edit, Trash2 } from "lucide-react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -11,6 +11,17 @@ import { Badge } from "@/components/ui/badge"
 import RecursoModal from "@/components/recurso-modal"
 import { apiRecursos } from "@/lib/api"
 import toast from "react-hot-toast"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { cn } from "@/lib/utils"
 
 // Interface para os dados do recurso
 interface Recurso {
@@ -32,7 +43,9 @@ export default function Recursos() {
   const [recursos, setRecursos] = useState<Recurso[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
-  // Função para buscar os dados, agora reutilizável
+  const [isAlertOpen, setIsAlertOpen] = useState(false);
+  const [deletingResourceId, setDeletingResourceId] = useState<string | null>(null);
+
   const fetchRecursos = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -59,21 +72,27 @@ export default function Recursos() {
     setIsModalOpen(true)
   }
 
-  const handleDelete = async (recursoId: string) => {
-    if (window.confirm("Tem certeza que deseja excluir este recurso?")) {
-      const promise = apiRecursos.delete(`/recursos/${recursoId}`);
-      toast.promise(promise, {
-        loading: 'Excluindo...',
-        success: () => {
-          fetchRecursos(); 
-          return 'Recurso excluído com sucesso!';
-        },
-        error: 'Erro ao excluir o recurso.'
-      });
-    }
+  const handleDeleteClick = (recursoId: string) => {
+    setDeletingResourceId(recursoId); 
+    setIsAlertOpen(true); 
   }
 
- 
+  const handleConfirmDelete = async () => {
+    if (!deletingResourceId) return;
+
+    const promise = apiRecursos.delete(`/recursos/${deletingResourceId}`);
+    
+    toast.promise(promise, {
+      loading: 'Excluindo...',
+      success: () => {
+        fetchRecursos(); // Atualiza a tabela
+        setIsAlertOpen(false); // Fecha o modal
+        return 'Recurso excluído com sucesso!';
+      },
+      error: 'Erro ao excluir o recurso.'
+    });
+  }
+   
   const filteredRecursos = recursos.filter(
     (recurso) =>
       recurso.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -119,7 +138,7 @@ export default function Recursos() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem onClick={() => handleEdit(recurso)}><Edit className="mr-2 h-4 w-4" />Editar</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleDelete(recurso.id)} className="text-red-600 focus:text-white focus:bg-red-500"><Trash2 className="mr-2 h-4 w-4" />Excluir</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleDeleteClick(recurso.id)} className="text-red-600 focus:text-white focus:bg-red-500"><Trash2 className="mr-2 h-4 w-4" />Excluir</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>
@@ -134,6 +153,26 @@ export default function Recursos() {
         recurso={editingRecurso}
         onSuccess={fetchRecursos} 
       />
+      <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Você tem certeza absoluta?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Essa ação não pode ser desfeita. Isso irá remover permanentemente o recurso do sistema.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            {/* O botão de Ação agora usa nossa classe de botão destrutivo e chama a função de confirmação */}
+            <AlertDialogAction 
+              onClick={handleConfirmDelete}
+              className={cn(buttonVariants({ variant: "destructive" }))}
+            >
+              Confirmar Exclusão
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
