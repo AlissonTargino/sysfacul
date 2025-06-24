@@ -1,6 +1,7 @@
+"use client"
 
+import type React from "react"
 import { useState } from "react"
-import { useRouter } from "next/router"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -12,11 +13,10 @@ import { apiUsuarios } from "@/lib/api"
 
 export default function Login() {
   const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
+  const [senha, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null) 
-
-  const { login } = useAuth();
+  const { login } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -24,21 +24,15 @@ export default function Login() {
     setError(null) 
 
     try {
-      const response = await apiUsuarios.post('/auth/login', {
-        email,
-        password,
-      });
-  
+      const response = await apiUsuarios.post('/auth/login', { email, senha });
       login(response.data.token);
-
     } catch (err: any) {
-    
       const errorMessage = err.response?.data?.error || 'Não foi possível fazer login. Verifique suas credenciais.';
       setError(errorMessage);
+    } finally {
       setIsLoading(false);
     }
- 
-  }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
@@ -69,12 +63,12 @@ export default function Login() {
                 id="password"
                 type="password"
                 placeholder="••••••••"
-                value={password}
+                value={senha}
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
             </div>
-            {/* Exibe a mensagem de erro, se houver */}
+            {/* Agora a variável 'error' existe e esta linha funcionará */}
             {error && <p className="text-sm font-medium text-destructive text-center">{error}</p>}
           </CardContent>
           <CardFooter>

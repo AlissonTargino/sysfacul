@@ -28,7 +28,7 @@ export default function Layout({ children }: LayoutProps) {
       {/* Sidebar */}
       <aside className="w-64 bg-slate-900 text-white flex flex-col">
         <div className="h-20 flex items-center justify-center border-b border-slate-700">
-          <h1 className="text-2xl font-bold">SysFacul</h1>
+          <h1 className="text-2xl font-bold">Sysfacul</h1>
         </div>
         <nav className="flex-1 px-4 py-4 space-y-2">
           {navigation.map((item) => {
