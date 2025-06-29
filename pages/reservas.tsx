@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect, useCallback, useMemo } from "react"
-import type { DayProps } from "react-day-picker"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react"
 import { Calendar } from "@/components/ui/calendar"
@@ -47,35 +46,11 @@ export default function Reservas() {
     fetchReservas()
   }, [fetchReservas])
 
-  // Lógica para marcar os dias com bolinhas - incluir todos os status
-  const diasComReserva = useMemo(() => {
-    return new Set(
-      reservas
-        .filter((r) => r.status === "CONFIRMADA" || r.status === "PENDENTE") // Incluir confirmadas e pendentes
-        .map((r) => new Date(r.dataHoraInicio).toDateString()),
-    )
+  const bookedDays = useMemo(() => {
+    return reservas
+      .filter((r) => r.status === "CONFIRMADA" || r.status === "PENDENTE")
+      .map((r) => new Date(r.dataHoraInicio))
   }, [reservas])
-
-  function CustomDay(props: DayProps) {
-    const { date } = props
-    // Importa o componente original para renderizá-lo
-    const { Day } = require("react-day-picker")
-
-    if (!date) {
-      return <Day {...props} />
-    }
-
-    const isBooked = diasComReserva.has(date.toDateString())
-
-    return (
-      <div className="relative">
-        <Day {...props} />
-        {isBooked && (
-          <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2 h-2 w-2 rounded-full bg-blue-500 z-10"></div>
-        )}
-      </div>
-    )
-  }
 
   const reservasParaDataSelecionada = useMemo(() => {
     if (!selectedDate) return []
@@ -119,7 +94,7 @@ export default function Reservas() {
       </div>
 
       <div className="flex items-center justify-between">
-        <span className="text-lg font-medium capitalize">{format(currentDate, "MMMM yyyy", { locale: ptBR })}</span>
+        <span className="text-lg font-medium capitalize">{format(currentDate, "MMMM yy", { locale: ptBR })}</span>
         <div className="flex items-center space-x-2">
           <Button variant="outline" size="sm" onClick={() => setCurrentDate(subMonths(currentDate, 1))}>
             <ChevronLeft className="h-4 w-4" />
@@ -137,10 +112,9 @@ export default function Reservas() {
         <div className="xl:col-span-2">
           <Card className="w-full">
             <CardContent className="p-4">
-              {/* Cabeçalho do calendário com navegação */}
               <div className="flex justify-between items-center mb-4">
                 <span className="text-lg font-medium capitalize">
-                  {format(currentDate, "MMMM yyyy", { locale: ptBR })}
+                  {format(currentDate, "MMMM yy", { locale: ptBR })}
                 </span>
                 <div className="flex items-center space-x-2">
                   <Button variant="outline" size="sm" onClick={() => setCurrentDate(subMonths(currentDate, 1))}>
@@ -152,7 +126,6 @@ export default function Reservas() {
                 </div>
               </div>
 
-              {/* Calendário sem navegação */}
               <div className="flex justify-center">
                 <Calendar
                   mode="single"
@@ -163,7 +136,10 @@ export default function Reservas() {
                   month={currentDate}
                   onMonthChange={setCurrentDate}
                   locale={ptBR}
-                  components={{ Day: CustomDay }}
+                  modifiers={{ booked: bookedDays }}
+                  modifiersClassNames={{
+                    booked: 'day-booked',
+                  }}
                   footer={
                     <div className="flex items-center justify-center pt-4 text-sm text-slate-600 border-t">
                       <div className="h-2 w-2 rounded-full bg-blue-500 mr-2"></div>
@@ -174,18 +150,19 @@ export default function Reservas() {
                   classNames={{
                     months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
                     month: "space-y-4",
-                    caption: "hidden", // Esconde o cabeçalho padrão
-                    nav: "hidden", // Esconde a navegação padrão
+                    caption: "hidden",
+                    nav: "hidden",
                     table: "w-full border-collapse space-y-1",
                     head_row: "flex",
-                    head_cell: "text-muted-foreground rounded-md w-9 font-normal text-[0.8rem]",
+                    head_cell: "text-muted-foreground rounded-md w-14 font-normal text-sm",
                     row: "flex w-full mt-2",
-                    cell: "h-9 w-9 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
-                    day: "h-9 w-9 p-0 font-normal aria-selected:opacity-100",
+                    cell: "h-14 w-14 text-center text-base p-0 relative focus-within:relative focus-within:z-20",
+                    day: "h-14 w-14 p-0 font-normal aria-selected:opacity-100",
                     day_range_end: "day-range-end",
+                    // Alteração aqui para garantir que a seleção seja visível
                     day_selected:
-                      "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
-                    day_today: "bg-accent text-accent-foreground",
+                      "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground rounded-md",
+                    day_today: "bg-accent text-accent-foreground rounded-md",
                     day_outside:
                       "day-outside text-muted-foreground opacity-50 aria-selected:bg-accent/50 aria-selected:text-muted-foreground aria-selected:opacity-30",
                     day_disabled: "text-muted-foreground opacity-50",
@@ -225,7 +202,7 @@ export default function Reservas() {
                           </p>
                         </div>
                         <Badge
-                          variant={reserva.status === "CANCELADA" ? "destructive" : "secondary"}
+                          variant={reserva.status === "CANCELADA" ? "destructive" : "default"}
                           className="text-xs capitalize"
                         >
                           {reserva.status.toLowerCase()}
@@ -266,7 +243,7 @@ export default function Reservas() {
                           </p>
                         </div>
                         <Badge
-                          variant={reserva.status === "CANCELADA" ? "destructive" : "secondary"}
+                          variant={reserva.status === "CANCELADA" ? "destructive" : "default"}
                           className="text-xs capitalize"
                         >
                           {reserva.status.toLowerCase()}
